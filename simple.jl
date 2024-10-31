@@ -19,19 +19,13 @@ end
 end
 
 @agent struct angar(GridAgent{2})
-    boxes::Int = 5
-end
-
-@agent struct bloqueo(GridAgent{2})
+    boxes::Int = 0 
 end
 
 function agent_step!(agent::box, model)
 end
 
 function agent_step!(agent::angar, model)
-end
-
-function agent_step!(agent::bloqueo, model)
 end
 
 function closest_box(agent::robot, model)
@@ -93,9 +87,7 @@ function agent_step!(agent::robot, model)
             if agent.pos == closest_box1.pos
                 closest_box1.status = taken
                 agent.capacity = full
-
-                # Elimina la caja del modelo
-                remove_agent!(closest_box1, model)
+                remove_agent!(closest_box1, model) # Elimina la caja del modelo
             end
         else
             posicion_act = (agent.pos[1], agent.pos[2] - 1)
@@ -123,6 +115,14 @@ function agent_step!(agent::robot, model)
             if agent.pos == closest_angar.pos
                 agent.capacity = empty
                 closest_angar.boxes += 1
+
+                # Verificar si el angar ahora tiene 5 cajas
+                if closest_angar.boxes == 5
+                    # Crear un nuevo angar cerca
+                    new_angar_pos = (closest_angar.pos[1], closest_angar.pos[2] + 1) # Ejemplo: crear arriba
+                    add_agent!(angar, model; pos = new_angar_pos)
+                    closest_angar.boxes = 0 # Reiniciamos las cajas en el angar original
+                end
             end
         else
             posicion_act = (agent.pos[1], agent.pos[2] - 1)
@@ -133,15 +133,14 @@ end
 
 function initialize_model(; number = 40, griddims = (40, 40))
     space = GridSpace(griddims; periodic = false, metric = :manhattan)
-    model = StandardABM(Union{robot, box, angar, bloqueo}, space; agent_step!, scheduler = Schedulers.fastest)
+    model = StandardABM(Union{robot, box, angar}, space; agent_step!, scheduler = Schedulers.fastest)
     matrix = fill(1, griddims...)
 
     all_positions = [(x, y) for x in 1:griddims[1], y in 1:griddims[2]]
     mezcla = shuffle(all_positions)
 
-    # Colocar robots en posiciones específicas
     num_robots = 5
-    bottom_y = 1  # Última fila (abajo)
+    bottom_y = 1  # Last row (bottom)
     posicion_ini = div(griddims[1], 10) 
     spacing = 2 * posicion_ini
 
@@ -150,7 +149,6 @@ function initialize_model(; number = 40, griddims = (40, 40))
     for robot_pos in robot_positions
         add_agent!(robot, model; pos = robot_pos)
     end
-
     bloqueadas = []
     for robot_pos in robot_positions
         append!(bloqueadas, [(robot_pos[1] + dx, robot_pos[2] + dy) for dx in -1:1, dy in -1:1])
@@ -162,27 +160,28 @@ function initialize_model(; number = 40, griddims = (40, 40))
         error("No hay suficientes posiciones válidas para las cajas")
     end
 
-    # Agregar cajas en posiciones válidas
+    # Add boxes to valid positions
     for i in 1:number
         add_agent!(box, model; pos = posicion_co[i])
     end
 
-    # Agregar angars en posiciones válidas
+    num_angar = round(Int, num_robots)
+
+    function box_at_position(pos, model)
+        for agent in agents_in_position(pos, model)
+            if isa(agent, box)
+                return true
+            end
+        end
+        return false
+    end
+
+    # Add angars to random valid positions
     angar_positions = []
     for robot_pos in robot_positions
         if !any(agent -> isa(agent, box), agents_in_position(robot_pos, model))
             add_agent!(angar, model; pos = robot_pos)
             push!(angar_positions, robot_pos)
-        end
-    end
-
-    # Agregar bloqueos para dividir en 4 columnas
-    num_columnas = 4
-    columnas_bloqueo = [round(Int, griddims[1] * i / (num_columnas + 1)) for i in 1:num_columnas]
-
-    for col in columnas_bloqueo
-        for y in 1:griddims[2]
-            add_agent!(bloqueo, model; pos = (col, y))
         end
     end
 

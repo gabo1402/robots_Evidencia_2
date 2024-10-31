@@ -13,7 +13,6 @@ function App() {
   let [boxes, setBoxes] = useState([]);
   let [robots, setRobots] = useState([]);
   let [angars, setAngars] = useState([]);
-  let [bloqueos, setBloqueos] = useState([]);
 
   let setup = () => {
     setGridSize(40); // Asegurarse de que el tamaño de la cuadrícula sea 40
@@ -30,7 +29,6 @@ function App() {
       setBoxes(data["boxes"]);
       setRobots(data["robots"]);
       setAngars(data["angars"]);
-      setBloqueos(data["bloqueos"]);
       setPasos(0);
     });
   }
@@ -43,7 +41,6 @@ function App() {
         setBoxes(data["boxes"]);
         setRobots(data["robots"]);
         setAngars(data["angars"]);
-        setBloqueos(data["bloqueos"]);
         setPasos(prev => prev + 1);
       });
     }, 1000 / simSpeed);
@@ -96,16 +93,6 @@ function App() {
             width={sizing}  
             height={sizing} 
             href={"./angar.svg"} 
-          />
-        ))}
-        {bloqueos.map(bloqueo => (
-          <image
-            key={bloqueo["id"]}
-            x={(bloqueo["pos"][0] - 1) * sizing} 
-            y={(bloqueo["pos"][1] - 1) * sizing} 
-            width={sizing}  
-            height={sizing} 
-            href={"./bloqueo.png"} 
           />
         ))}
       </svg>
