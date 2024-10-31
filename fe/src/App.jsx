@@ -93,7 +93,7 @@ function App() {
             y={(angar["pos"][1] - 1) * sizing} 
             width={sizing}  
             height={sizing} 
-            href={"./angar.svg"} 
+            href={"./angar.png"} 
           />
         ))}
       </svg>

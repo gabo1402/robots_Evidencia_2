@@ -141,15 +141,12 @@ function initialize_model(; number = 40, griddims = (40, 40))
     mezcla = shuffle(all_positions)
 
     num_robots = 5
-    robot_positions = []
+    bottom_y = 1  # Última fila (abajo)
+    posicion_ini = div(griddims[1], 10) 
+    spacing = 2 * posicion_ini
 
-    # Encontrar posiciones válidas para los robots
-    for pos in mezcla
-        if length(robot_positions) < num_robots && !any(agent -> isa(agent, box) || isa(agent, angar), agents_in_position(pos, model))
-            push!(robot_positions, pos)
-        end
-    end
-
+    robot_columns = [posicion_ini + (i-1) * spacing for i in 1:num_robots]
+    robot_positions = [(col, bottom_y) for col in robot_columns]
     for robot_pos in robot_positions
         add_agent!(robot, model; pos = robot_pos)
     end
