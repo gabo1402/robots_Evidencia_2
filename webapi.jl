@@ -14,9 +14,12 @@ route("/simulations", method = POST) do
     id = string(uuid1())
     instances[id] = model
 
+    # Inicializar listas para cada tipo de agente
     boxes = []
     robots = []
     angars = []
+    bloqueos = []  # Agregar bloqueos
+
     for agent in allagents(model)
         if agent isa box
             push!(boxes, agent)
@@ -24,10 +27,19 @@ route("/simulations", method = POST) do
             push!(robots, agent)
         elseif agent isa angar
             push!(angars, agent)
+        elseif agent isa bloqueo  # Verificar si el agente es un bloqueo
+            push!(bloqueos, agent)
         end
     end
 
-    json(Dict(:msg => "Hola", "Location" => "/simulations/$id", "boxes" => boxes, "robots" => robots, "angars" => angars))
+    json(Dict(
+        :msg => "Hola",
+        "Location" => "/simulations/$id",
+        "boxes" => boxes,
+        "robots" => robots,
+        "angars" => angars,
+        "bloqueos" => bloqueos  # Incluir bloqueos en la respuesta
+    ))
 end
 
 route("/simulations/:id") do
@@ -38,6 +50,8 @@ route("/simulations/:id") do
     boxes = []
     robots = []
     angars = []
+    bloqueos = []  # Agregar bloqueos
+
     for agent in allagents(model)
         if agent isa box
             push!(boxes, agent)
@@ -45,10 +59,18 @@ route("/simulations/:id") do
             push!(robots, agent)
         elseif agent isa angar
             push!(angars, agent)
+        elseif agent isa bloqueo  # Verificar si el agente es un bloqueo
+            push!(bloqueos, agent)
         end
     end
 
-    json(Dict(:msg => "Adios", "boxes" => boxes, "robots" => robots, "angars" => angars))
+    json(Dict(
+        :msg => "Adios",
+        "boxes" => boxes,
+        "robots" => robots,
+        "angars" => angars,
+        "bloqueos" => bloqueos  # Incluir bloqueos en la respuesta
+    ))
 end
 
 Genie.config.run_as_server = true

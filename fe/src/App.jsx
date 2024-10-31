@@ -1,28 +1,27 @@
 import { Button, ButtonGroup, CheckboxField, SliderField, SwitchField } from '@aws-amplify/ui-react';
-import { useRef, useState } from 'react'
+import { useRef, useState } from 'react';
 import '@aws-amplify/ui-react/styles.css';
 
 function App() {
   let [location, setLocation] = useState("");
-  let [gridSize, setGridSize] = useState(80);
-  let [simSpeed,setSimSpeed] = useState(2);
+  let [gridSize, setGridSize] = useState(40); // Cambiar el tamaño de la cuadrícula a 40
+  let [simSpeed, setSimSpeed] = useState(2);
   const sizing = 12.5;
   const running = useRef(null);
   let [pasos, setPasos] = useState(0);
-  let [sliderGridSize, setSliderGridSize] = useState(80);
   let [number, setNumber] = useState(40);
   let [boxes, setBoxes] = useState([]);
   let [robots, setRobots] = useState([]);
   let [angars, setAngars] = useState([]);
-  
+  let [bloqueos, setBloqueos] = useState([]);
 
   let setup = () => {
-    setGridSize(sliderGridSize);
+    setGridSize(40); // Asegurarse de que el tamaño de la cuadrícula sea 40
     fetch("http://localhost:8000/simulations", {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ 
-        dim: [sliderGridSize, sliderGridSize],
+        dim: [40, 40], // Establecer dimensiones fijas
         number: number,
       })
     }).then(resp => resp.json())
@@ -31,6 +30,7 @@ function App() {
       setBoxes(data["boxes"]);
       setRobots(data["robots"]);
       setAngars(data["angars"]);
+      setBloqueos(data["bloqueos"]);
       setPasos(0);
     });
   }
@@ -42,15 +42,16 @@ function App() {
       .then(data => {
         setBoxes(data["boxes"]);
         setRobots(data["robots"]);
+        setAngars(data["angars"]);
+        setBloqueos(data["bloqueos"]);
         setPasos(prev => prev + 1);
       });
-    }, 3000 / simSpeed);
+    }, 1000 / simSpeed);
   };
 
   let handleStop = () => {
     clearInterval(running.current);
   };
-  let offset = ((sizing * sliderGridSize) - gridSize * 12) / 2;
 
   return (
     <>
@@ -60,14 +61,13 @@ function App() {
         <Button onClick={handleStop}>Stop</Button>
       </ButtonGroup>
 
-      <SliderField label="Grid size" min={40} max={80} step={10}
-        value={sliderGridSize} onChange={setSliderGridSize} />
+      {/* Eliminado SliderField para Grid size */}
       <SliderField label="Simulation speed" min={1} max={30}
         value={simSpeed} onChange={setSimSpeed} />
       
       <p>Pasos: {pasos}</p> 
 
-      <svg width={sizing * sliderGridSize} height={sizing * sliderGridSize} xmlns="http://www.w3.org/2000/svg" style={{backgroundColor:"white"}}>
+      <svg width={sizing * gridSize} height={sizing * gridSize} xmlns="http://www.w3.org/2000/svg" style={{backgroundColor:"white"}}>
         {boxes.map(box => (
           <image
             key={box["id"]}
@@ -98,10 +98,19 @@ function App() {
             href={"./angar.svg"} 
           />
         ))}
+        {bloqueos.map(bloqueo => (
+          <image
+            key={bloqueo["id"]}
+            x={(bloqueo["pos"][0] - 1) * sizing} 
+            y={(bloqueo["pos"][1] - 1) * sizing} 
+            width={sizing}  
+            height={sizing} 
+            href={"./bloqueo.png"} 
+          />
+        ))}
       </svg>
     </>
-  )
+  );
 }
 
-export default App
-
+export default App;
