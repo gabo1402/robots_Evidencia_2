@@ -65,6 +65,7 @@ function App() {
       <p>Pasos: {pasos}</p> 
 
       <svg width={sizing * gridSize} height={sizing * gridSize} xmlns="http://www.w3.org/2000/svg" style={{backgroundColor:"white"}}>
+      
         {boxes.map(box => (
           <image
             key={box["id"]}
