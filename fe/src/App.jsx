@@ -61,7 +61,7 @@ function App() {
       {/* Eliminado SliderField para Grid size */}
       <SliderField label="Simulation speed" min={1} max={30}
         value={simSpeed} onChange={setSimSpeed} />
-      
+
       <p>Pasos: {pasos}</p> 
 
       <svg width={sizing * gridSize} height={sizing * gridSize} xmlns="http://www.w3.org/2000/svg" style={{backgroundColor:"white"}}>

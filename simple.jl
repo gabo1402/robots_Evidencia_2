@@ -68,33 +68,30 @@ end
 
 function agent_step!(agent::robot, model)
     if agent.capacity == empty
-        closest_box1, _ = closest_box(agent, model)
-
-        if closest_box1 !== nothing
-            obj_pos = closest_box1.pos
-            actual_pos = agent.pos
-
-            diff_x = obj_pos[1] - actual_pos[1]
-            diff_y = obj_pos[2] - actual_pos[2]
-
-            if abs(diff_x) > abs(diff_y)
-                posicion_act = (actual_pos[1] + sign(diff_x), actual_pos[2])
-            else
-                posicion_act = (actual_pos[1], actual_pos[2] + sign(diff_y))
-            end
-
-            move_agent!(agent, posicion_act, model)
-
-            if agent.pos == closest_box1.pos
-                closest_box1.status = taken
-                agent.capacity = full
-                remove_agent!(closest_box1, model) # Elimina la caja del modelo
-            end
-        else
-            posicion_act = (agent.pos[1], agent.pos[2] - 1)
-            move_agent!(agent, posicion_act, model)
+        # Recorre el mapa en zigzag
+        # Decide la dirección de movimiento
+        if (agent.pos[2] % 2) == 0  # Par (mover hacia la derecha)
+            posicion_act = (agent.pos[1] + 1, agent.pos[2])
+        else  # Impar (mover hacia la izquierda)
+            posicion_act = (agent.pos[1] - 1, agent.pos[2])
         end
 
+        # Chequear límites del grid
+        if posicion_act[1] < 1 || posicion_act[1] > 40  # Supone que el grid es 40x40
+            posicion_act = (agent.pos[1], agent.pos[2] + 1)  # Cambiar de fila
+        end
+
+        move_agent!(agent, posicion_act, model)
+
+        # Revisa si hay una caja en la nueva posición
+        for neighbor in allagents(model)
+            if isa(neighbor, box) && neighbor.status == waiting && neighbor.pos == agent.pos
+                neighbor.status = taken
+                agent.capacity = full
+                remove_agent!(neighbor, model) # Elimina la caja del modelo
+                break  # Salir del bucle al encontrar una caja
+            end
+        end
     elseif agent.capacity == full
         closest_angar, _ = closest_angar_nearby(agent, model)
 
