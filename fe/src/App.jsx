@@ -68,11 +68,18 @@ function App() {
   );
 
   const Angar = ({ position }) => (
-    <mesh position={position} scale={[1.5, 1.5, 1.5]}>
+    <mesh position={position} scale={[5, 5, 5]}>
+      {/* Geometría para la estructura del angar (caja hueca) */}
       <boxGeometry args={[1, 1, 1]} />
-      <meshStandardMaterial map={new THREE.TextureLoader().load("./angar.png")} />
+      {/* Usamos un material con transparencia y sin color sólido para el angar */}
+      <meshStandardMaterial 
+        color="lightgray" 
+        transparent={true} 
+        opacity={0.5
+      } />
     </mesh>
   );
+  
 
   // Fondo gris como plano
   const Ground = () => (

@@ -20,6 +20,7 @@ end
 @agent struct robot(GridAgent{2})  
     capacity::RobotStatus = empty
     orientation::Float64 = normal
+    last_box::Union{Nothing, Tuple{Float64, Float64, Float64, Float64}} = nothing  # Para recordar la caja eliminada
 end
 
 @agent struct angar(GridAgent{2})
@@ -50,25 +51,22 @@ function closest_box(agent::robot, model)
     return closest_box1, distanciam
 end
 
-# Function tencontrar caja cercana
 function closest_angar_nearby(agent::robot, model)
     closest_angar = nothing
     distanciam = Inf
 
-    # Buscar agentes
     for neighbor in allagents(model)
         if isa(neighbor, angar) && neighbor.boxes < 5  # Verifica que el angar tenga menos de 5 cajas
             d_vecino = abs(neighbor.pos[1] - agent.pos[1]) + abs(neighbor.pos[2] - agent.pos[2])
             if d_vecino < distanciam
                 distanciam = d_vecino
-                closest_angar = neighbor  # angar cercano e ir
+                closest_angar = neighbor  # angar cercano
             end
         end
     end
 
     return closest_angar, distanciam
 end
-
 
 function agent_step!(agent::robot, model)
     if agent.capacity == empty
@@ -90,9 +88,12 @@ function agent_step!(agent::robot, model)
             move_agent!(agent, posicion_act, model)
 
             if agent.pos == closest_box1.pos
+                # Guardar las dimensiones de la caja antes de eliminarla
+                agent.last_box = (closest_box1.width, closest_box1.height, closest_box1.depth, closest_box1.weight)
+                
                 closest_box1.status = taken
                 agent.capacity = full
-                remove_agent!(closest_box1, model) # Elimina la caja del modelo
+                remove_agent!(closest_box1, model)  # Elimina la caja del modelo
             end
         else
             posicion_act = (agent.pos[1], agent.pos[2] - 1)
@@ -124,7 +125,19 @@ function agent_step!(agent::robot, model)
                 if closest_angar.boxes == 5
                     new_angar_pos = (closest_angar.pos[1], closest_angar.pos[2] + 1) # Ejemplo: crear arriba
                     add_agent!(angar, model; pos = new_angar_pos)
-                     
+                end
+
+                # Recrear la caja con las dimensiones guardadas
+                if agent.last_box !== nothing
+                    width, height, depth, weight = agent.last_box
+                    add_agent!(box, model; pos = closest_angar.pos, width = width, height = height, depth = depth, weight = weight)
+                    
+                    # Cambiar el estado de la caja a 'developed'
+                    for new_box in allagents(model)
+                        if isa(new_box, box) && new_box.pos == closest_angar.pos
+                            new_box.status = developed
+                        end
+                    end
                 end
             end
         else
@@ -133,6 +146,7 @@ function agent_step!(agent::robot, model)
         end
     end
 end
+
 
 function initialize_model(; number = 40, griddims = (40, 40))
     space = GridSpace(griddims; periodic = false, metric = :manhattan)
@@ -147,7 +161,7 @@ function initialize_model(; number = 40, griddims = (40, 40))
         (width=1.2, height=1.2, depth=1.2, weight=15.0),
         (width=1.0, height=1.0, depth=1.0, weight=10.0),
         (width=1.2, height=1.2, depth=1.2, weight=15.0),
-        (width=10.0, height=10.0, depth=10.0, weight=10.0),
+        (width=1.0, height=1.0, depth=1.0, weight=10.0),
         (width=1.2, height=1.2, depth=1.2, weight=15.0),
         (width=1.0, height=1.0, depth=1.0, weight=10.0),
         (width=1.2, height=1.2, depth=1.2, weight=15.0),
