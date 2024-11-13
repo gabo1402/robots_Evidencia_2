@@ -1,12 +1,14 @@
-import { Button, ButtonGroup, CheckboxField, SliderField, SwitchField } from '@aws-amplify/ui-react';
+import { Button, ButtonGroup, SliderField } from '@aws-amplify/ui-react';
 import { useRef, useState } from 'react';
+import { Canvas } from '@react-three/fiber';
+import { OrbitControls } from '@react-three/drei';
 import '@aws-amplify/ui-react/styles.css';
+import * as THREE from 'three';
 
 function App() {
   let [location, setLocation] = useState("");
   let [gridSize, setGridSize] = useState(40); // Cambiar el tamaño de la cuadrícula a 40
   let [simSpeed, setSimSpeed] = useState(2);
-  const sizing = 12.5;
   const running = useRef(null);
   let [pasos, setPasos] = useState(0);
   let [number, setNumber] = useState(40);
@@ -50,6 +52,36 @@ function App() {
     clearInterval(running.current);
   };
 
+  // Componentes 3D para los elementos, escalados para mejor visibilidad
+  const Box = ({ position, width, height, depth }) => (
+    <mesh position={position} scale={[width, height, depth]}>
+      <boxGeometry args={[1, 1, 1]} />
+      <meshStandardMaterial color="orange" /> {/* O usar otro material simple */}
+    </mesh>
+  );
+
+  const Robot = ({ position }) => (
+    <mesh position={position} scale={[1.5, 1.5, 1.5]}>
+      <boxGeometry args={[1, 1, 1]} />
+      <meshStandardMaterial map={new THREE.TextureLoader().load("./dron1.png")} />
+    </mesh>
+  );
+
+  const Angar = ({ position }) => (
+    <mesh position={position} scale={[1.5, 1.5, 1.5]}>
+      <boxGeometry args={[1, 1, 1]} />
+      <meshStandardMaterial map={new THREE.TextureLoader().load("./angar.png")} />
+    </mesh>
+  );
+
+  // Fondo gris como plano
+  const Ground = () => (
+    <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.5, 0]}>
+      <planeGeometry args={[60, 60]} />
+      <meshStandardMaterial color="#b0b0b0" />
+    </mesh>
+  );
+
   return (
     <>
       <ButtonGroup variation="primary">
@@ -58,45 +90,34 @@ function App() {
         <Button onClick={handleStop}>Stop</Button>
       </ButtonGroup>
 
-      {/* Eliminado SliderField para Grid size */}
       <SliderField label="Simulation speed" min={1} max={30}
         value={simSpeed} onChange={setSimSpeed} />
 
-      <p>Pasos: {pasos}</p> 
+      <p>Pasos: {pasos}</p>
 
-      <svg width={sizing * gridSize} height={sizing * gridSize} xmlns="http://www.w3.org/2000/svg" style={{backgroundColor:"white"}}>
-      
-        {boxes.map(box => (
-          <image
-            key={box["id"]}
-            x={(box["pos"][0] - 1) * sizing} 
-            y={(box["pos"][1] - 1) * sizing} 
-            width={sizing}  
-            height={sizing} 
-            href={"./boxA.png"} 
-          />
+      <Canvas camera={{ position: [0, 30, 50], fov: 50 }}>
+        <ambientLight intensity={0.6} />
+        <pointLight position={[10, 20, 10]} />
+        <OrbitControls />
+
+        <Ground /> {/* Plano de fondo */}
+
+        {boxes.map((box) => (
+  <Box
+    key={box.id}
+    position={[(box.pos[0] - 1), 0, (box.pos[1] - 1)]}
+    width={box.width}
+    height={box.height}
+    depth={box.depth}
+  />
+))}
+        {robots.map((robot) => (
+          <Robot key={robot.id} position={[(robot.pos[0] - 1), 0, (robot.pos[1] - 1)]} />
         ))}
-        {robots.map(robot => (
-          <image
-            key={robot["id"]}
-            x={(robot["pos"][0] - 1) * sizing} 
-            y={(robot["pos"][1] - 1) * sizing} 
-            width={sizing}  
-            height={sizing} 
-            href={"./dron1.png"} 
-          />
+        {angars.map((angar) => (
+          <Angar key={angar.id} position={[(angar.pos[0] - 1), 0, (angar.pos[1] - 1)]} />
         ))}
-        {angars.map(angar => (
-          <image
-            key={angar["id"]}
-            x={(angar["pos"][0] - 1) * sizing} 
-            y={(angar["pos"][1] - 1) * sizing} 
-            width={sizing}  
-            height={sizing} 
-            href={"./angar.png"} 
-          />
-        ))}
-      </svg>
+      </Canvas>
     </>
   );
 }

@@ -11,6 +11,10 @@ right = 3π/2
 
 @agent struct box(GridAgent{2})
     status::BoxStatus = waiting
+    width::Float64
+    height::Float64
+    depth::Float64
+    weight::Float64
 end
 
 @agent struct robot(GridAgent{2})  
@@ -68,30 +72,33 @@ end
 
 function agent_step!(agent::robot, model)
     if agent.capacity == empty
-        # Recorre el mapa en zigzag
-        # Decide la dirección de movimiento
-        if (agent.pos[2] % 2) == 0  # Par (mover hacia la derecha)
-            posicion_act = (agent.pos[1] + 1, agent.pos[2])
-        else  # Impar (mover hacia la izquierda)
-            posicion_act = (agent.pos[1] - 1, agent.pos[2])
-        end
+        closest_box1, _ = closest_box(agent, model)
 
-        # Chequear límites del grid
-        if posicion_act[1] < 1 || posicion_act[1] > 40  # Supone que el grid es 40x40
-            posicion_act = (agent.pos[1], agent.pos[2] + 1)  # Cambiar de fila
-        end
+        if closest_box1 !== nothing
+            obj_pos = closest_box1.pos
+            actual_pos = agent.pos
 
-        move_agent!(agent, posicion_act, model)
+            diff_x = obj_pos[1] - actual_pos[1]
+            diff_y = obj_pos[2] - actual_pos[2]
 
-        # Revisa si hay una caja en la nueva posición
-        for neighbor in allagents(model)
-            if isa(neighbor, box) && neighbor.status == waiting && neighbor.pos == agent.pos
-                neighbor.status = taken
-                agent.capacity = full
-                remove_agent!(neighbor, model) # Elimina la caja del modelo
-                break  # Salir del bucle al encontrar una caja
+            if abs(diff_x) > abs(diff_y)
+                posicion_act = (actual_pos[1] + sign(diff_x), actual_pos[2])
+            else
+                posicion_act = (actual_pos[1], actual_pos[2] + sign(diff_y))
             end
+
+            move_agent!(agent, posicion_act, model)
+
+            if agent.pos == closest_box1.pos
+                closest_box1.status = taken
+                agent.capacity = full
+                remove_agent!(closest_box1, model) # Elimina la caja del modelo
+            end
+        else
+            posicion_act = (agent.pos[1], agent.pos[2] - 1)
+            move_agent!(agent, posicion_act, model)
         end
+
     elseif agent.capacity == full
         closest_angar, _ = closest_angar_nearby(agent, model)
 
@@ -114,12 +121,10 @@ function agent_step!(agent::robot, model)
                 agent.capacity = empty
                 closest_angar.boxes += 1
 
-                # Verificar si el angar ahora tiene 5 cajas
                 if closest_angar.boxes == 5
-                    # Crear un nuevo angar cerca
                     new_angar_pos = (closest_angar.pos[1], closest_angar.pos[2] + 1) # Ejemplo: crear arriba
                     add_agent!(angar, model; pos = new_angar_pos)
-                     # Reiniciamos las cajas en el angar original
+                     
                 end
             end
         else
@@ -133,42 +138,83 @@ function initialize_model(; number = 40, griddims = (40, 40))
     space = GridSpace(griddims; periodic = false, metric = :manhattan)
     model = StandardABM(Union{robot, box, angar}, space; agent_step!, scheduler = Schedulers.fastest)
 
-    # Generar posiciones aleatorias para los robots
+    caja_dimensiones = [
+        (width=1.0, height=1.0, depth=1.0, weight=10.0),
+        (width=1.2, height=1.2, depth=1.2, weight=15.0),
+        (width=1.0, height=1.0, depth=1.0, weight=10.0),
+        (width=1.2, height=1.2, depth=1.2, weight=15.0),
+        (width=1.0, height=1.0, depth=1.0, weight=10.0),
+        (width=1.2, height=1.2, depth=1.2, weight=15.0),
+        (width=1.0, height=1.0, depth=1.0, weight=10.0),
+        (width=1.2, height=1.2, depth=1.2, weight=15.0),
+        (width=10.0, height=10.0, depth=10.0, weight=10.0),
+        (width=1.2, height=1.2, depth=1.2, weight=15.0),
+        (width=1.0, height=1.0, depth=1.0, weight=10.0),
+        (width=1.2, height=1.2, depth=1.2, weight=15.0),
+        (width=1.0, height=1.0, depth=1.0, weight=10.0),
+        (width=1.2, height=1.2, depth=1.2, weight=15.0),
+        (width=1.0, height=1.0, depth=1.0, weight=10.0),
+        (width=1.2, height=1.2, depth=1.2, weight=15.0),
+        (width=1.0, height=1.0, depth=1.0, weight=10.0),
+        (width=1.2, height=1.2, depth=1.2, weight=15.0),
+        (width=1.0, height=1.0, depth=1.0, weight=10.0),
+        (width=1.2, height=1.2, depth=1.2, weight=15.0),
+        (width=1.0, height=1.0, depth=1.0, weight=10.0),
+        (width=1.2, height=1.2, depth=1.2, weight=15.0),
+        (width=1.0, height=1.0, depth=1.0, weight=10.0),
+        (width=1.2, height=1.2, depth=1.2, weight=15.0),
+        (width=1.0, height=1.0, depth=1.0, weight=10.0),
+        (width=1.2, height=1.2, depth=1.2, weight=15.0),
+        (width=1.0, height=1.0, depth=1.0, weight=10.0),
+        (width=1.2, height=1.2, depth=1.2, weight=15.0),
+        (width=1.0, height=1.0, depth=1.0, weight=10.0),
+        (width=1.2, height=1.2, depth=1.2, weight=15.0),
+        (width=1.0, height=1.0, depth=1.0, weight=10.0),
+        (width=1.2, height=1.2, depth=1.2, weight=15.0),
+        (width=1.0, height=1.0, depth=1.0, weight=10.0),
+        (width=1.2, height=1.2, depth=1.2, weight=15.0),
+        (width=1.0, height=1.0, depth=1.0, weight=10.0),
+        (width=1.2, height=1.2, depth=1.2, weight=15.0),
+        (width=1.0, height=1.0, depth=1.0, weight=10.0),
+        (width=1.2, height=1.2, depth=1.2, weight=15.0),
+        (width=1.0, height=1.0, depth=1.0, weight=10.0),
+        (width=0.8, height=1.1, depth=1.3, weight=12.0)  # Hasta llegar a 40
+    ]
+
     all_positions = [(x, y) for x in 1:griddims[1], y in 1:griddims[2]]
     mezcla = shuffle(all_positions)
 
-    num_robots = 5
-    bottom_y = 1  # Última fila (abajo)
+    # Agregar robots como antes
+    num_robots = 1
+    bottom_y = 1  
     posicion_ini = div(griddims[1], 10) 
     spacing = 2 * posicion_ini
-
     robot_columns = [posicion_ini + (i-1) * spacing for i in 1:num_robots]
     robot_positions = [(col, bottom_y) for col in robot_columns]
     for robot_pos in robot_positions
         add_agent!(robot, model; pos = robot_pos)
     end
 
-    # Bloquear posiciones alrededor de los robots
+    # Calcular posiciones disponibles para las cajas
     bloqueadas = []
     for robot_pos in robot_positions
         append!(bloqueadas, [(robot_pos[1] + dx, robot_pos[2] + dy) for dx in -1:1, dy in -1:1])
     end
 
-    # Filtrar las posiciones para las cajas
     posicion_co = setdiff(mezcla, bloqueadas)
-
     if length(posicion_co) < number
         error("No hay suficientes posiciones válidas para las cajas")
     end
 
-    # Add boxes to valid positions
+    # Añadir cajas con dimensiones personalizadas
+    # Añadir cada caja con sus dimensiones específicas
     for i in 1:number
-        add_agent!(box, model; pos = posicion_co[i])
+        dims = caja_dimensiones[i]
+        add_agent!(box, model; pos = posicion_co[i], width = dims.width, height = dims.height, depth = dims.depth, weight = dims.weight)
     end
 
+    # Añadir hangares como antes
     num_angar = round(Int, num_robots)
-
-    # Añadir angars a posiciones aleatorias válidas
     angar_positions = []
     for robot_pos in robot_positions
         if !any(agent -> isa(agent, box), agents_in_position(robot_pos, model))
