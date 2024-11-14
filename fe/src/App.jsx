@@ -22,7 +22,7 @@ function App() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ 
-        dim: [40, 40], // Establecer dimensiones fijas
+        dim: [40, 40, 40], // Establecer dimensiones fijas
         number: number,
       })
     }).then(resp => resp.json())
@@ -70,7 +70,7 @@ function App() {
   const Angar = ({ position }) => (
     <mesh position={position} scale={[5, 5, 5]}>
       {/* Geometría para la estructura del angar (caja hueca) */}
-      <boxGeometry args={[1, 1, 1]} />
+      <boxGeometry args={[2, 2, 2]} />
       {/* Usamos un material con transparencia y sin color sólido para el angar */}
       <meshStandardMaterial 
         color="lightgray" 
@@ -108,21 +108,14 @@ function App() {
         <OrbitControls />
 
         <Ground /> {/* Plano de fondo */}
-
-        {boxes.map((box) => (
-  <Box
-    key={box.id}
-    position={[(box.pos[0] - 1), 0, (box.pos[1] - 1)]}
-    width={box.width}
-    height={box.height}
-    depth={box.depth}
-  />
-))}
-        {robots.map((robot) => (
-          <Robot key={robot.id} position={[(robot.pos[0] - 1), 0, (robot.pos[1] - 1)]} />
+        {boxes.map((box, index) => (
+          <Box key={index} position={box.pos} width={box.width} height={box.height} depth={box.depth} />
         ))}
-        {angars.map((angar) => (
-          <Angar key={angar.id} position={[(angar.pos[0] - 1), 0, (angar.pos[1] - 1)]} />
+        {robots.map((robot, index) => (
+          <Robot key={index} position={robot.pos} />
+        ))}
+        {angars.map((angar, index) => (
+          <Angar key={index} position={angar.pos} />
         ))}
       </Canvas>
     </>
