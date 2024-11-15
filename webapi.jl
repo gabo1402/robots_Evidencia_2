@@ -8,7 +8,7 @@ route("/simulations", method = POST) do
     payload = jsonpayload()
     x = payload["dim"][1]
     y = payload["dim"][2]
-    z = payload["dim"][3]  # Agregar la tercera dimensión desde el payload
+    z = payload["dim"][3]  
     number = payload["number"]
 
     # Llamar a initialize_model con las tres dimensiones

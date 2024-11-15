@@ -11,7 +11,7 @@ function App() {
   let [simSpeed, setSimSpeed] = useState(2);
   const running = useRef(null);
   let [pasos, setPasos] = useState(0);
-  let [number, setNumber] = useState(40);
+  let [number, setNumber] = useState(5);
   let [boxes, setBoxes] = useState([]);
   let [robots, setRobots] = useState([]);
   let [angars, setAngars] = useState([]);
@@ -61,7 +61,7 @@ function App() {
   );
 
   const Robot = ({ position }) => (
-    <mesh position={position} scale={[1.5, 1.5, 1.5]}>
+    <mesh position={position} scale={[1, 1, 1]}>
       <boxGeometry args={[1, 1, 1]} />
       <meshStandardMaterial map={new THREE.TextureLoader().load("./dron1.png")} />
     </mesh>
@@ -69,22 +69,21 @@ function App() {
 
   const Angar = ({ position }) => (
     <mesh position={position} scale={[5, 5, 5]}>
-      {/* Geometría para la estructura del angar (caja hueca) */}
-      <boxGeometry args={[2, 2, 2]} />
-      {/* Usamos un material con transparencia y sin color sólido para el angar */}
+      {}
+      <boxGeometry args={[1, 1, 1]} />
+      {}
       <meshStandardMaterial 
         color="lightgray" 
         transparent={true} 
-        opacity={0.5
+        opacity={0.7
       } />
     </mesh>
   );
   
 
-  // Fondo gris como plano
   const Ground = () => (
-    <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.5, 0]}>
-      <planeGeometry args={[60, 60]} />
+    <mesh rotation={[-Math.PI / 2, 0, 0]} position={[20.5, 0, 20.5]}>
+      <planeGeometry args={[40, 40]} />
       <meshStandardMaterial color="#b0b0b0" />
     </mesh>
   );
@@ -102,7 +101,7 @@ function App() {
 
       <p>Pasos: {pasos}</p>
 
-      <Canvas camera={{ position: [0, 30, 50], fov: 50 }}>
+      <Canvas camera={{ position: [25, 20, 70], fov: 50 }}>
         <ambientLight intensity={0.6} />
         <pointLight position={[10, 20, 10]} />
         <OrbitControls />
