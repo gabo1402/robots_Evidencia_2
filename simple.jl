@@ -1,6 +1,19 @@
 using Agents, Random
 using StaticArrays: SVector
-using JSON3
+using JSON3  
+
+function read_list_data(file_path)
+    try
+        json_string = read(file_path, String)  # Lee el archivo como un string
+        data = JSON3.read(json_string)  # Parsea el string como JSON con JSON3
+        println("Datos leídos correctamente:")
+        println(data)  # Muestra todo el contenido del JSON
+        return data  # Retorna los datos procesados
+    catch e
+        println("Error al leer el archivo JSON: ", e)
+        return nothing  # Retorna nothing en caso de error
+    end
+end
 
 @enum BoxStatus waiting taken developed
 @enum RobotStatus empty full
@@ -35,12 +48,6 @@ function agent_step!(agent::box, model)
 end
 
 function agent_step!(agent::angar, model)
-end
-
-function leer_destinos_cajas(ruta_archivo)
-    data = JSON3.read(ruta_archivo)
-    # Convertimos los destinos a un diccionario donde la clave es el `identifier` y el valor es la posición
-    return Dict(parse(Int, item["partno"]) => Tuple(item["position"]) for item in data["fitted_items"])
 end
 
 function closest_box(agent::robot, model)
@@ -163,9 +170,14 @@ function agent_step!(agent::robot, model)
 end
 
 
-function initialize_model(; number = 5, griddims = (40, 40, 40))
+function initialize_model(; number = 5, griddims = (40, 40, 40), file_path = "C:/Users/gainl/.julia/evidencia 1/cajas1.json")
     space = GridSpace(griddims; periodic = false, metric = :manhattan)
     model = StandardABM(Union{robot, box, angar}, space; agent_step!, scheduler = Schedulers.fastest)
+
+    list_data = read_list_data(file_path)
+    if list_data === nothing
+        error("No se pudieron cargar los datos del JSON.")
+    end
 
     caja_dimensiones = [
         (width=1.0, height=1.0, depth=1.0, weight=10.0),

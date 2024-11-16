@@ -11,8 +11,7 @@ route("/simulations", method = POST) do
     z = payload["dim"][3]  
     number = payload["number"]
 
-    # Llamar a initialize_model con las tres dimensiones
-    model = initialize_model(griddims=(x, y, z), number=(number))
+    model = initialize_model(griddims=(x, y, z), number=(number), file_path="C:/Users/gainl/.julia/evidencia 1/cajas1.json")
     id = string(uuid1())
     instances[id] = model
 
