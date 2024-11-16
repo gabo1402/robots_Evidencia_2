@@ -50,23 +50,24 @@ end
 function agent_step!(agent::angar, model)
 end
 
-function closest_box(agent::robot, model)
-    closest_box1 = nothing
-    distanciam = Inf
-
-    for neighbor in allagents(model)
-        if isa(neighbor, box) && neighbor.status == waiting #y 
-            d_vecino = sum(abs.(neighbor.pos .- agent.pos))  # Cambio aquí para distancia 3D
-
-            if d_vecino < distanciam
-                distanciam = d_vecino
-                closest_box1 = neighbor  # Caja cercana
+function closest_box(agent::robot, model, fitted_items)
+    closest_box1 = nothing  # Inicializamos la caja a nada
+    
+    # Iterar sobre las cajas en el orden del JSON
+    for item in fitted_items
+        # Buscar la caja correspondiente por su id en el modelo
+        for neighbor in allagents(model)
+            if isa(neighbor, box) && neighbor.status == waiting && neighbor.identifier == item["id"]
+                closest_box1 = neighbor  # Encontramos la caja correspondiente
+                return closest_box1  # Retornar la primera caja que coincida con el id
             end
         end
     end
 
-    return closest_box1, distanciam
+    return closest_box1  # Retornar nada si no se encuentra ninguna caja
 end
+
+
 
 function closest_angar_nearby(agent::robot, model)
     closest_angar = nothing
@@ -87,15 +88,23 @@ end
 
 function agent_step!(agent::robot, model)
     if agent.capacity == empty
-        closest_box1, _ = closest_box(agent, model)
-
+        fitted_items = read_list_data("C:/Users/gainl/.julia/evidencia 1/cajas1.json")["fitted_items"]
+        
+        if fitted_items === nothing || length(fitted_items) == 0
+            return
+        end
+        
+        # Buscar la siguiente caja en la lista del JSON
+        closest_box1 = closest_box(agent, model, fitted_items)
+        
+        # Si encontramos una caja, procedemos a mover el agente
         if closest_box1 !== nothing
             obj_pos = closest_box1.pos
             actual_pos = agent.pos
 
             diff_x = obj_pos[1] - actual_pos[1]
             diff_y = obj_pos[2] - actual_pos[2]
-            diff_z = obj_pos[3] - actual_pos[3]  # Incluir eje Z
+            diff_z = obj_pos[3] - actual_pos[3]
 
             if abs(diff_x) > abs(diff_y) && abs(diff_x) > abs(diff_z)
                 posicion_act = (actual_pos[1] + sign(diff_x), actual_pos[2], actual_pos[3])
@@ -113,9 +122,6 @@ function agent_step!(agent::robot, model)
                 agent.capacity = full
                 remove_agent!(closest_box1, model)  
             end
-        else
-            posicion_act = (agent.pos[1], agent.pos[2], agent.pos[3] - 1)  
-            move_agent!(agent, posicion_act, model)
         end
 
     elseif agent.capacity == full
