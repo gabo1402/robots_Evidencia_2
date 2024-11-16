@@ -37,7 +37,7 @@ end
 @agent struct robot(GridAgent{3})  
     capacity::RobotStatus = empty
     orientation::Float64 = normal
-    last_box::Union{Nothing, Tuple{Float64, Float64, Float64, Float64}} = nothing  # Para recordar la caja eliminada
+    last_box::Union{Nothing, Tuple{Int64, Float64, Float64, Float64, Float64}} = nothing  # Para recordar la caja eliminada
 end
 
 @agent struct angar(GridAgent{3})  
@@ -55,7 +55,7 @@ function closest_box(agent::robot, model)
     distanciam = Inf
 
     for neighbor in allagents(model)
-        if isa(neighbor, box) && neighbor.status == waiting
+        if isa(neighbor, box) && neighbor.status == waiting #y 
             d_vecino = sum(abs.(neighbor.pos .- agent.pos))  # Cambio aquí para distancia 3D
 
             if d_vecino < distanciam
@@ -108,7 +108,7 @@ function agent_step!(agent::robot, model)
             move_agent!(agent, posicion_act, model)
 
             if agent.pos == closest_box1.pos
-                agent.last_box = (closest_box1.width, closest_box1.height, closest_box1.depth, closest_box1.weight)
+                agent.last_box = (closest_box1.identifier, closest_box1.width, closest_box1.height, closest_box1.depth, closest_box1.weight)
                 closest_box1.status = taken
                 agent.capacity = full
                 remove_agent!(closest_box1, model)  
@@ -145,9 +145,9 @@ function agent_step!(agent::robot, model)
                 new_box_y_position = closest_angar.pos[2] + closest_angar.boxes - 1  
 
                 if agent.last_box !== nothing
-                    width, height, depth, weight = agent.last_box
+                    identifier, width, height, depth, weight = agent.last_box
                     new_pos = (closest_angar.pos[1], new_box_y_position, closest_angar.pos[3])  
-                    add_agent!(box, model; pos = new_pos, width = width, height = height, depth = depth, weight = weight)
+                    add_agent!(box, model; pos = new_pos,identifier =identifier, width = width, height = height, depth = depth, weight = weight)
                     
                     for new_box in allagents(model)
                         if isa(new_box, box) && new_box.pos == new_pos
@@ -185,7 +185,8 @@ function initialize_model(; number = 5, griddims = (40, 40, 40), file_path = "C:
         (width=1.0, height=1.0, depth=1.0, weight=10.0),
         (width=1.2, height=1.2, depth=1.2, weight=15.0),
         (width=1.0, height=1.0, depth=1.0, weight=10.0)
-    ]
+        ]
+
 
     all_positions = [(x, 1, z) for x in 1:griddims[1], z in 1:griddims[3]]
     mezcla = shuffle(all_positions)
@@ -213,8 +214,14 @@ function initialize_model(; number = 5, griddims = (40, 40, 40), file_path = "C:
     # Asigna identificadores únicos a cada caja
     for i in 1:number
         dims = caja_dimensiones[i]
-        add_agent!(box, model; identifier = i, pos = posicion_co[i], width = dims.width, height = dims.height, depth = dims.depth, weight = dims.weight)
-    end    
+        pos = posicion_co[i]
+        add_agent!(box, model; identifier = i, pos = pos, status = waiting, width = dims.width, height = dims.height, depth = dims.depth, weight = dims.weight)
+        
+        # Imprime la información de la caja añadida
+        println("Caja añadida: ID=$i, Posición=$pos, Dimensiones=(Width=$(dims.width), Height=$(dims.height), Depth=$(dims.depth)), Peso=$(dims.weight)")
+    end
+    
+    
 
     num_angar = round(Int, num_robots)
     angar_positions = []
