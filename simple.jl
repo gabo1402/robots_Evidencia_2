@@ -14,6 +14,30 @@ function read_list_data(file_path)
         return nothing  # Retorna nothing en caso de error
     end
 end
+function guardar_cajas_en_json(model, ruta_archivo)
+    cajas = []
+
+    for agente in allagents(model)
+        if isa(agente, box)
+            push!(cajas, Dict(
+                "identifier" => agente.identifier,
+                "status" => string(agente.status),
+                "width" => agente.width,
+                "height" => agente.height,
+                "depth" => agente.depth,
+                "weight" => agente.weight,
+                "pos" => agente.pos
+            ))
+        end
+    end
+
+    json_data = Dict("cajas" => cajas)
+    open(ruta_archivo, "w") do archivo
+        write(archivo, JSON3.write(json_data))
+    end
+
+    println("Archivo '$(ruta_archivo)' creado con éxito.")
+end
 
 @enum BoxStatus waiting taken developed
 @enum RobotStatus empty full
@@ -88,7 +112,7 @@ end
 
 function agent_step!(agent::robot, model)
     if agent.capacity == empty
-        fitted_items = read_list_data("C:/Users/gainl/.julia/evidencia 1/cajas1.json")["fitted_items"]
+        fitted_items = read_list_data("C:/Users/alezu/Documents/ProyectosTEC/multiagentes/evidencia2/robots_Evidencia_2/cajas1.json")["fitted_items"]
         
         if fitted_items === nothing || length(fitted_items) == 0
             return
@@ -176,7 +200,7 @@ function agent_step!(agent::robot, model)
 end
 
 
-function initialize_model(; number = 5, griddims = (40, 40, 40), file_path = "C:/Users/gainl/.julia/evidencia 1/cajas1.json")
+function initialize_model(; number = 5, griddims = (40, 40, 40), file_path = "C:/Users/alezu/Documents/ProyectosTEC/multiagentes/evidencia2/robots_Evidencia_2/cajas1.json")
     space = GridSpace(griddims; periodic = false, metric = :manhattan)
     model = StandardABM(Union{robot, box, angar}, space; agent_step!, scheduler = Schedulers.fastest)
 
@@ -237,6 +261,9 @@ function initialize_model(; number = 5, griddims = (40, 40, 40), file_path = "C:
             push!(angar_positions, robot_pos)
         end
     end
+    ruta_archivo = "cajas.json"
+    guardar_cajas_en_json(model, ruta_archivo)
+
 
     return model
 end
