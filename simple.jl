@@ -31,9 +31,8 @@ right = 3π/2
     weight::Float64
 end
 
-
-
 @agent struct robot(GridAgent{3})  
+    identifier::Int  # Identidad única del robot
     capacity::RobotStatus = empty
     orientation::Float64 = normal
     last_box::Union{Nothing, Tuple{Int64, Float64, Float64, Float64, Float64}} = nothing  # Para recordar la caja eliminada
@@ -50,21 +49,18 @@ function agent_step!(agent::angar, model)
 end
 
 function closest_box(agent::robot, model, fitted_items)
-    closest_box1 = nothing  # Inicializamos la caja a nada
-    
-    # Iterar sobre las cajas en el orden del JSON
     for item in fitted_items
-        # Buscar la caja correspondiente por su id en el modelo
-        for neighbor in allagents(model)
-            if isa(neighbor, box) && neighbor.status == waiting && neighbor.identifier == item["id"]
-                closest_box1 = neighbor  # Encontramos la caja correspondiente
-                return closest_box1  # Retornar la primera caja que coincida con el id
+        if item["robot"] == agent.identifier  # Verifica que la caja esté asignada al robot
+            for neighbor in allagents(model)
+                if isa(neighbor, box) && neighbor.status == waiting && neighbor.identifier == item["id"]
+                    return neighbor  # Retorna la caja que corresponde
+                end
             end
         end
     end
-
-    return closest_box1  # Retornar nada si no se encuentra ninguna caja
+    return nothing  # No se encontró ninguna caja asignada
 end
+
 
 function target_position_nearby(agent::robot, model, fitted_items)
     if agent.last_box !== nothing
@@ -221,14 +217,17 @@ function initialize_model(; number = 5, griddims = (40, 40, 40), file_path = "C:
     all_positions = [(x, 1, z) for x in 1:griddims[1], z in 1:griddims[3]]
     mezcla = shuffle(all_positions)
 
-    num_robots = 1
+    num_robots = 2
     bottom_z = 1 
     posicion_ini = div(griddims[1], 10)
     spacing = 2 * posicion_ini
     robot_columns = [posicion_ini + (i - 1) * spacing for i in 1:num_robots]
     robot_positions = [(col, bottom_z, bottom_z) for col in robot_columns] 
-    for robot_pos in robot_positions
-        add_agent!(robot, model; pos = robot_pos)
+
+    # Crear y añadir robots con identificadores únicos
+    for (i, robot_pos) in enumerate(robot_positions)
+        add_agent!(robot, model; pos = robot_pos, identifier = i)
+        println("Robot añadido: ID=$i, Posición=$robot_pos")
     end
 
     bloqueadas = []
