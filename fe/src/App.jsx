@@ -11,7 +11,7 @@ function App() {
   let [simSpeed, setSimSpeed] = useState(2);
   const running = useRef(null);
   let [pasos, setPasos] = useState(0);
-  let [number, setNumber] = useState(5);
+  let [number, setNumber] = useState(40);
   let [boxes, setBoxes] = useState([]);
   let [robots, setRobots] = useState([]);
   let [angars, setAngars] = useState([]);

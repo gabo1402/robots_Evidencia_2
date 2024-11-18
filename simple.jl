@@ -20,12 +20,10 @@ function guardar_cajas_en_json(model, ruta_archivo)
         if isa(agente, box)
             push!(cajas, Dict(
                 "identifier" => agente.identifier,
-                "status" => string(agente.status),
                 "width" => agente.width,
                 "height" => agente.height,
                 "depth" => agente.depth,
                 "weight" => agente.weight,
-                "pos" => agente.pos
             ))
         end
     end
@@ -103,27 +101,13 @@ end
 
 function agent_step!(agent::robot, model)
     # Leer los datos del JSON
-    fitted_items = read_list_data("C:/Users/gainl/.julia/evidencia 1/cajas1.json")["fitted_items"]
-    
-    if fitted_items === nothing || isempty(fitted_items)
-        println("No hay datos en fitted_items.")
-        return
-    end
+    fitted_items = read_list_data("C:/Users/alezu/Documents/ProyectosTEC/multiagentes/evidencia2/robots_Evidencia_2/cajas1.json")["fitted_items"]
+
 
     if agent.capacity == empty
-<<<<<<< HEAD
-        fitted_items = read_list_data("C:/Users/alezu/Documents/ProyectosTEC/multiagentes/evidencia2/robots_Evidencia_2/cajas1.json")["fitted_items"]
         
-        if fitted_items === nothing || length(fitted_items) == 0
-            return
-        end
-        
-=======
->>>>>>> b8b4a9894eb67b15c642630672fdade486361405
-        # Buscar la siguiente caja en la lista del JSON
         closest_box1 = closest_box(agent, model, fitted_items)
 
-        # Si encontramos una caja, procedemos a mover el agente hacia ella
         if closest_box1 !== nothing
             println("El robot está buscando la caja con ID: $(closest_box1.identifier)")
             obj_pos = closest_box1.pos
@@ -151,7 +135,6 @@ function agent_step!(agent::robot, model)
                 println("El robot ha recogido la caja con ID: $(agent.last_box[1])")
             end
         else
-            # Si no se encuentra ninguna caja, mover el robot a (20, 1, 20)
             target_position = (20, 1, 20)
             println("No se encontró una caja disponible. El robot se dirige a la posición de espera $(target_position).")
             obj_pos = SVector{3}(target_position...)
@@ -227,34 +210,58 @@ function agent_step!(agent::robot, model)
 end
 
 
-<<<<<<< HEAD
-function initialize_model(; number = 5, griddims = (40, 40, 40), file_path = "C:/Users/alezu/Documents/ProyectosTEC/multiagentes/evidencia2/robots_Evidencia_2/cajas1.json")
-=======
-
-
-function initialize_model(; number = 5, griddims = (40, 40, 40), file_path = "C:/Users/gainl/.julia/evidencia 1/cajas1.json")
->>>>>>> b8b4a9894eb67b15c642630672fdade486361405
+function initialize_model(; number = 40, griddims = (40, 40, 40))
     space = GridSpace(griddims; periodic = false, metric = :manhattan)
     model = StandardABM(Union{robot, box, angar}, space; agent_step!, scheduler = Schedulers.fastest)
-
-    list_data = read_list_data(file_path)
-    if list_data === nothing
-        error("No se pudieron cargar los datos del JSON.")
-    end
 
     caja_dimensiones = [
         (width=1.0, height=1.0, depth=1.0, weight=10.0),
         (width=1.2, height=1.2, depth=1.2, weight=15.0),
         (width=1.0, height=1.0, depth=1.0, weight=10.0),
         (width=1.2, height=1.2, depth=1.2, weight=15.0),
-        (width=1.0, height=1.0, depth=1.0, weight=10.0)
+        (width=1.0, height=1.0, depth=1.0, weight=10.0),
+        (width=1.2, height=1.2, depth=1.2, weight=15.0),
+        (width=1.0, height=1.0, depth=1.0, weight=10.0),
+        (width=1.2, height=1.2, depth=1.2, weight=15.0),
+        (width=1.0, height=1.0, depth=1.0, weight=10.0),
+        (width=1.2, height=1.2, depth=1.2, weight=15.0),
+        (width=1.0, height=1.0, depth=1.0, weight=10.0),
+        (width=1.2, height=1.2, depth=1.2, weight=15.0),
+        (width=1.0, height=1.0, depth=1.0, weight=10.0),
+        (width=1.2, height=1.2, depth=1.2, weight=15.0),
+        (width=1.0, height=1.0, depth=1.0, weight=10.0),
+        (width=1.2, height=1.2, depth=1.2, weight=15.0),
+        (width=1.0, height=1.0, depth=1.0, weight=10.0),
+        (width=1.2, height=1.2, depth=1.2, weight=15.0),
+        (width=1.0, height=1.0, depth=1.0, weight=10.0),
+        (width=1.2, height=1.2, depth=1.2, weight=15.0),
+        (width=1.0, height=1.0, depth=1.0, weight=10.0),
+        (width=1.2, height=1.2, depth=1.2, weight=15.0),
+        (width=1.0, height=1.0, depth=1.0, weight=10.0),
+        (width=1.2, height=1.2, depth=1.2, weight=15.0),
+        (width=1.0, height=1.0, depth=1.0, weight=10.0),
+        (width=1.2, height=1.2, depth=1.2, weight=15.0),
+        (width=1.0, height=1.0, depth=1.0, weight=10.0),
+        (width=1.2, height=1.2, depth=1.2, weight=15.0),
+        (width=1.0, height=1.0, depth=1.0, weight=10.0),
+        (width=1.2, height=1.2, depth=1.2, weight=15.0),
+        (width=1.0, height=1.0, depth=1.0, weight=10.0),
+        (width=1.2, height=1.2, depth=1.2, weight=15.0),
+        (width=1.0, height=1.0, depth=1.0, weight=10.0),
+        (width=1.2, height=1.2, depth=1.2, weight=15.0),
+        (width=1.0, height=1.0, depth=1.0, weight=10.0),
+        (width=1.2, height=1.2, depth=1.2, weight=15.0),
+        (width=1.0, height=1.0, depth=1.0, weight=10.0),
+        (width=1.2, height=1.2, depth=1.2, weight=15.0),
+        (width=1.0, height=1.0, depth=1.0, weight=10.0),
+        (width=1.2, height=1.2, depth=1.2, weight=15.0)
         ]
 
 
     all_positions = [(x, 1, z) for x in 1:griddims[1], z in 1:griddims[3]]
     mezcla = shuffle(all_positions)
 
-    num_robots = 2
+    num_robots = 5
     bottom_z = 1 
     posicion_ini = div(griddims[1], 10)
     spacing = 2 * posicion_ini

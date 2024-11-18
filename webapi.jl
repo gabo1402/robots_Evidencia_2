@@ -11,7 +11,7 @@ route("/simulations", method = POST) do
     z = payload["dim"][3]  
     number = payload["number"]
 
-    model = initialize_model(griddims=(x, y, z), number=(number), file_path="C:/Users/alezu/Documents/ProyectosTEC/multiagentes/evidencia2/robots_Evidencia_2/cajas1.json")
+    model = initialize_model(griddims=(x, y, z), number=(number))
     id = string(uuid1())
     instances[id] = model
 
