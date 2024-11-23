@@ -19,7 +19,7 @@ for i in range(5):
     packer = Packer()
     box = Bin(
         id=f'group_{i + 1}',
-        WHD=(6, 16, 10),  # Medidas del packer
+        WHD=(22, 10, 32),  # Medidas del packer
         max_weight=28080,
         put_type=0
     )
@@ -54,11 +54,13 @@ for idx, packer in enumerate(packers):
     )
 
     # Margen y posición inicial del packer en el eje X
-    x_inicial = 1 + idx * (6 + 2)
+    x_inicial = 1 + idx * (22 + 2)
 
     # Ajustar las posiciones de las cajas
     for box in packer.bins:
         for item in box.items:
+            dimensions = item.getDimension()
+            rotation_type = item.rotation_type # Obtener el tipo de rotación
             output_data.append({
                 "id": int(item.id),
                 "position": [
@@ -66,8 +68,11 @@ for idx, packer in enumerate(packers):
                     float(item.position[1]) + 1,         
                     float(item.position[2]) + 2          
                 ],
-                "robot": int(idx + 1) 
+                "dimensions": dimensions,
+                "rotation_type": rotation_type,  # Añadir el tipo de rotación
+                "robot": int(idx + 1)
             })
+
 
 # Función personalizada para manejar tipos no serializables
 def custom_encoder(obj):

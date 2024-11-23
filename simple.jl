@@ -101,31 +101,29 @@ end
 
 function agent_step!(agent::robot, model)
     # Leer los datos del JSON
-    fitted_items = read_list_data("C:/Users/alezu/Documents/ProyectosTEC/multiagentes/evidencia2/robots_Evidencia_2/cajas1.json")["fitted_items"]
-
+    fitted_items = read_list_data("C:/Users/gainl/.julia/loquesea/cajas1.json")["fitted_items"]
 
     if agent.capacity == empty
-        
         closest_box1 = closest_box(agent, model, fitted_items)
-
+        
         if closest_box1 !== nothing
             println("El robot está buscando la caja con ID: $(closest_box1.identifier)")
             obj_pos = closest_box1.pos
             actual_pos = agent.pos
 
-            diff_x = obj_pos[1] - actual_pos[1]
-            diff_y = obj_pos[2] - actual_pos[2]
-            diff_z = obj_pos[3] - actual_pos[3]
+            # Movimiento por pasos: primero en Y, luego en Z, y finalmente en X
+if actual_pos[2] != obj_pos[2]
+    posicion_act = (actual_pos[1], actual_pos[2] + sign(obj_pos[2] - actual_pos[2]), actual_pos[3])
+elseif actual_pos[3] != obj_pos[3]
+    posicion_act = (actual_pos[1], actual_pos[2], actual_pos[3] + sign(obj_pos[3] - actual_pos[3]))
+elseif actual_pos[1] != obj_pos[1]
+    posicion_act = (actual_pos[1] + sign(obj_pos[1] - actual_pos[1]), actual_pos[2], actual_pos[3])
+else
+    posicion_act = (actual_pos[1], actual_pos[2], actual_pos[3])  # Ya en la posición deseada
+end
 
-            if abs(diff_x) > abs(diff_y) && abs(diff_x) > abs(diff_z)
-                posicion_act = (actual_pos[1] + sign(diff_x), actual_pos[2], actual_pos[3])
-            elseif abs(diff_y) > abs(diff_z)
-                posicion_act = (actual_pos[1], actual_pos[2] + sign(diff_y), actual_pos[3])
-            else
-                posicion_act = (actual_pos[1], actual_pos[2], actual_pos[3] + sign(diff_z)) 
-            end
+move_agent!(agent, posicion_act, model)
 
-            move_agent!(agent, posicion_act, model)
 
             if agent.pos == closest_box1.pos
                 agent.last_box = (closest_box1.identifier, closest_box1.width, closest_box1.height, closest_box1.depth, closest_box1.weight)
@@ -135,24 +133,28 @@ function agent_step!(agent::robot, model)
                 println("El robot ha recogido la caja con ID: $(agent.last_box[1])")
             end
         else
-            target_position = (20, 1, 20)
-            println("No se encontró una caja disponible. El robot se dirige a la posición de espera $(target_position).")
+            # Posiciones de espera en hilera
+            waiting_positions = [(45, 1, 55), (50, 1, 55), (55, 1, 55), (60, 1, 55), (65, 1, 55)]
+            robot_index = agent.identifier
+            target_position = waiting_positions[robot_index]
+            
+            println("No se encontró una caja disponible. El robot $robot_index se dirige a la posición de espera $(target_position).")
             obj_pos = SVector{3}(target_position...)
             actual_pos = agent.pos
 
-            diff_x = obj_pos[1] - actual_pos[1]
-            diff_y = obj_pos[2] - actual_pos[2]
-            diff_z = obj_pos[3] - actual_pos[3]
+            # Movimiento por pasos: primero en Y, luego en Z, y finalmente en X
+if actual_pos[2] != obj_pos[2]
+    posicion_act = (actual_pos[1], actual_pos[2] + sign(obj_pos[2] - actual_pos[2]), actual_pos[3])
+elseif actual_pos[3] != obj_pos[3]
+    posicion_act = (actual_pos[1], actual_pos[2], actual_pos[3] + sign(obj_pos[3] - actual_pos[3]))
+elseif actual_pos[1] != obj_pos[1]
+    posicion_act = (actual_pos[1] + sign(obj_pos[1] - actual_pos[1]), actual_pos[2], actual_pos[3])
+else
+    posicion_act = (actual_pos[1], actual_pos[2], actual_pos[3])  # Ya en la posición deseada
+end
 
-            if abs(diff_x) > abs(diff_y) && abs(diff_x) > abs(diff_z)
-                posicion_act = (actual_pos[1] + sign(diff_x), actual_pos[2], actual_pos[3])
-            elseif abs(diff_y) > abs(diff_z)
-                posicion_act = (actual_pos[1], actual_pos[2] + sign(diff_y), actual_pos[3])
-            else
-                posicion_act = (actual_pos[1], actual_pos[2], actual_pos[3] + sign(diff_z)) 
-            end
+move_agent!(agent, posicion_act, model)
 
-            move_agent!(agent, posicion_act, model)
         end
 
     elseif agent.capacity == full
@@ -164,16 +166,15 @@ function agent_step!(agent::robot, model)
             obj_pos = SVector{3}(target_position...)
             actual_pos = agent.pos
 
-            diff_x = obj_pos[1] - actual_pos[1]
-            diff_y = obj_pos[2] - actual_pos[2]
-            diff_z = obj_pos[3] - actual_pos[3] 
-
-            if abs(diff_x) > abs(diff_y) && abs(diff_x) > abs(diff_z)
-                posicion_act = (actual_pos[1] + sign(diff_x), actual_pos[2], actual_pos[3])
-            elseif abs(diff_y) > abs(diff_z)
-                posicion_act = (actual_pos[1], actual_pos[2] + sign(diff_y), actual_pos[3])
+            # Movimiento por pasos: primero en X, luego en Z
+            if actual_pos[1] != obj_pos[1]
+                posicion_act = (actual_pos[1] + sign(obj_pos[1] - actual_pos[1]), actual_pos[2], actual_pos[3])
+            elseif actual_pos[3] != obj_pos[3]
+                posicion_act = (actual_pos[1], actual_pos[2], actual_pos[3] + sign(obj_pos[3] - actual_pos[3]))
+            elseif actual_pos[2] != obj_pos[2]
+                posicion_act = (actual_pos[1], actual_pos[2] + sign(obj_pos[2] - actual_pos[2]), actual_pos[3])
             else
-                posicion_act = (actual_pos[1], actual_pos[2], actual_pos[3] + sign(diff_z))  # Movimiento en Z
+                posicion_act = (actual_pos[1], actual_pos[2], actual_pos[3])  # Ya en la posición objetivo
             end
 
             move_agent!(agent, posicion_act, model)
@@ -197,10 +198,8 @@ function agent_step!(agent::robot, model)
                         status = developed
                     )
                     
-                    # Imprimir los valores de la caja para verificar
                     println("Caja colocada: ID=$identifier, Posición=$(Tuple(target_position)), Dimensiones=(Width=$width, Height=$height, Depth=$depth), Peso=$weight")
-
-                    agent.last_box = nothing  # El robot ya no recuerda la última caja
+                    agent.last_box = nothing
                 end
             end
         else
@@ -210,69 +209,73 @@ function agent_step!(agent::robot, model)
 end
 
 
-function initialize_model(; number = 40, griddims = (40, 40, 40))
+
+function initialize_model(; number = 40, griddims = (150, 50, 100))
     space = GridSpace(griddims; periodic = false, metric = :manhattan)
     model = StandardABM(Union{robot, box, angar}, space; agent_step!, scheduler = Schedulers.fastest)
+    
 
     caja_dimensiones = [
-        (width=1.0, height=1.0, depth=1.0, weight=10.0),
-        (width=1.2, height=1.2, depth=1.2, weight=15.0),
-        (width=1.0, height=1.0, depth=1.0, weight=10.0),
-        (width=1.2, height=1.2, depth=1.2, weight=15.0),
-        (width=1.0, height=1.0, depth=1.0, weight=10.0),
-        (width=1.2, height=1.2, depth=1.2, weight=15.0),
-        (width=1.0, height=1.0, depth=1.0, weight=10.0),
-        (width=1.2, height=1.2, depth=1.2, weight=15.0),
-        (width=1.0, height=1.0, depth=1.0, weight=10.0),
-        (width=1.2, height=1.2, depth=1.2, weight=15.0),
-        (width=1.0, height=1.0, depth=1.0, weight=10.0),
-        (width=1.2, height=1.2, depth=1.2, weight=15.0),
-        (width=1.0, height=1.0, depth=1.0, weight=10.0),
-        (width=1.2, height=1.2, depth=1.2, weight=15.0),
-        (width=1.0, height=1.0, depth=1.0, weight=10.0),
-        (width=1.2, height=1.2, depth=1.2, weight=15.0),
-        (width=1.0, height=1.0, depth=1.0, weight=10.0),
-        (width=1.2, height=1.2, depth=1.2, weight=15.0),
-        (width=1.0, height=1.0, depth=1.0, weight=10.0),
-        (width=1.2, height=1.2, depth=1.2, weight=15.0),
-        (width=1.0, height=1.0, depth=1.0, weight=10.0),
-        (width=1.2, height=1.2, depth=1.2, weight=15.0),
-        (width=1.0, height=1.0, depth=1.0, weight=10.0),
-        (width=1.2, height=1.2, depth=1.2, weight=15.0),
-        (width=1.0, height=1.0, depth=1.0, weight=10.0),
-        (width=1.2, height=1.2, depth=1.2, weight=15.0),
-        (width=1.0, height=1.0, depth=1.0, weight=10.0),
-        (width=1.2, height=1.2, depth=1.2, weight=15.0),
-        (width=1.0, height=1.0, depth=1.0, weight=10.0),
-        (width=1.2, height=1.2, depth=1.2, weight=15.0),
-        (width=1.0, height=1.0, depth=1.0, weight=10.0),
-        (width=1.2, height=1.2, depth=1.2, weight=15.0),
-        (width=1.0, height=1.0, depth=1.0, weight=10.0),
-        (width=1.2, height=1.2, depth=1.2, weight=15.0),
-        (width=1.0, height=1.0, depth=1.0, weight=10.0),
-        (width=1.2, height=1.2, depth=1.2, weight=15.0),
-        (width=1.0, height=1.0, depth=1.0, weight=10.0),
-        (width=1.2, height=1.2, depth=1.2, weight=15.0),
-        (width=1.0, height=1.0, depth=1.0, weight=10.0),
-        (width=1.2, height=1.2, depth=1.2, weight=15.0)
+        (width=5, height=5, depth=5, weight=10.0),
+        (width=7, height=7, depth=7, weight=10.0),
+        (width=1, height=1, depth=1, weight=10.0),
+        (width=1, height=1, depth=1, weight=10.0),
+        (width=7, height=7, depth=7, weight=10.0),
+        (width=1, height=1, depth=1, weight=10.0),
+        (width=5, height=5, depth=5, weight=10.0),
+        (width=1, height=1, depth=1, weight=10.0),
+        (width=1, height=1, depth=1, weight=10.0),
+        (width=1, height=1, depth=1, weight=10.0),
+        (width=1, height=1, depth=1, weight=10.0),
+        (width=1, height=1, depth=1, weight=10.0),
+        (width=1, height=1, depth=1, weight=10.0),
+        (width=5, height=5, depth=5, weight=10.0),
+        (width=5, height=5, depth=5, weight=10.0),
+        (width=1, height=1, depth=1, weight=10.0),
+        (width=7, height=7, depth=7, weight=10.0),
+        (width=5, height=5, depth=5, weight=10.0),
+        (width=1, height=1, depth=1, weight=10.0),
+        (width=1, height=1, depth=1, weight=10.0),
+        (width=1, height=1, depth=1, weight=10.0),
+        (width=5, height=5, depth=5, weight=10.0),
+        (width=1, height=1, depth=1, weight=10.0),
+        (width=1, height=1, depth=1, weight=10.0),
+        (width=1, height=1, depth=1, weight=10.0),
+        (width=1, height=1, depth=1, weight=10.0),
+        (width=5, height=5, depth=5, weight=10.0),
+        (width=1, height=1, depth=1, weight=10.0),
+        (width=7, height=7, depth=7, weight=10.0),
+        (width=1, height=1, depth=1, weight=10.0),
+        (width=5, height=5, depth=5, weight=10.0),
+        (width=5, height=5, depth=5, weight=10.0),
+        (width=1, height=1, depth=1, weight=10.0),
+        (width=1, height=1, depth=1, weight=10.0),
+        (width=1, height=1, depth=1, weight=10.0),
+        (width=1, height=1, depth=1, weight=10.0),
+        (width=1, height=1, depth=1, weight=10.0),
+        (width=1, height=1, depth=1, weight=10.0),
+        (width=7, height=7, depth=7, weight=10.0),
+        (width=1, height=1, depth=1, weight=10.0),
         ]
 
 
+    # Generación de posiciones para las cajas con la restricción de z >= 40
     all_positions = [(x, 1, z) for x in 1:griddims[1], z in 1:griddims[3]]
-    mezcla = shuffle(all_positions)
+    # Filtrar posiciones para que x sea uno de los valores permitidos y z >= 40
+    allowed_x = [5, 20, 40, 60, 70, 80, 90, 100, 120, 140]
+    filtered_positions = filter(pos -> pos[1] in allowed_x && pos[3] >= 40, all_positions)
+    mezcla = shuffle(filtered_positions)
+
 
     num_robots = 5
-    bottom_z = 1 
-    posicion_ini = div(griddims[1], 10)
-    spacing = 2 * posicion_ini
-    robot_columns = [posicion_ini + (i - 1) * spacing for i in 1:num_robots]
-    robot_positions = [(col, bottom_z, bottom_z) for col in robot_columns] 
+robot_positions = [(12, 1, 35), (36, 1, 35), (61, 1, 35), (86, 1, 35), (109, 1, 35)]
 
-    # Crear y añadir robots con identificadores únicos
-    for (i, robot_pos) in enumerate(robot_positions)
-        add_agent!(robot, model; pos = robot_pos, identifier = i)
-        println("Robot añadido: ID=$i, Posición=$robot_pos")
-    end
+# Crear y añadir robots con identificadores únicos
+for (i, robot_pos) in enumerate(robot_positions)
+    add_agent!(robot, model; pos = robot_pos, identifier = i)
+    println("Robot añadido: ID=$i, Posición=$robot_pos")
+end
+
 
     bloqueadas = []
     for robot_pos in robot_positions
@@ -285,25 +288,34 @@ function initialize_model(; number = 40, griddims = (40, 40, 40))
     end
 
     # Asigna identificadores únicos a cada caja
+    # Asigna identificadores únicos a cada caja
     for i in 1:number
         dims = caja_dimensiones[i]
-        pos = posicion_co[i]
-        add_agent!(box, model; identifier = i, pos = pos, status = waiting, width = dims.width, height = dims.height, depth = dims.depth, weight = dims.weight)
-        
+        pos = mezcla[i]
+    
+        add_agent!(box, model; identifier = i, pos = pos, status = waiting, 
+                width = dims.width, height = dims.height, depth = dims.depth, 
+                weight = dims.weight)
+    
         # Imprime la información de la caja añadida
         println("Caja añadida: ID=$i, Posición=$pos, Dimensiones=(Width=$(dims.width), Height=$(dims.height), Depth=$(dims.depth)), Peso=$(dims.weight)")
     end
+
+    
     
     
 
-    num_angar = round(Int, num_robots)
-    angar_positions = []
-    for robot_pos in robot_positions
-        if !any(agent -> isa(agent, box), agents_in_position(robot_pos, model))
-            add_agent!(angar, model; pos = robot_pos)
-            push!(angar_positions, robot_pos)
-        end
+    num_angar = 5
+angar_positions = [(1, 1, 2), (25, 1, 2), (49, 1, 2), (74, 1, 2), (97, 1, 2)]
+#medida de cada angar (22,10,32)
+
+for i in 1:num_angar
+    pos = angar_positions[i]
+    if !any(agent -> isa(agent, box), agents_in_position(pos, model))
+        add_agent!(angar, model; pos = pos)
     end
+end
+
     ruta_archivo = "cajas.json"
     guardar_cajas_en_json(model, ruta_archivo)
 

@@ -7,7 +7,7 @@ import * as THREE from 'three';
 
 function App() {
   let [location, setLocation] = useState("");
-  let [gridSize, setGridSize] = useState(40); // Cambiar el tamaño de la cuadrícula a 40
+  let [gridSize, setGridSize] = useState(150); // Cambiar el tamaño de la cuadrícula a 40
   let [simSpeed, setSimSpeed] = useState(2);
   const running = useRef(null);
   let [pasos, setPasos] = useState(0);
@@ -17,12 +17,12 @@ function App() {
   let [angars, setAngars] = useState([]);
 
   let setup = () => {
-    setGridSize(40); // Asegurarse de que el tamaño de la cuadrícula sea 40
+    setGridSize(100); // Asegurarse de que el tamaño de la cuadrícula sea 40
     fetch("http://localhost:8000/simulations", {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ 
-        dim: [40, 40, 40], // Establecer dimensiones fijas
+        dim: [150, 50, 100], // Establecer dimensiones fijas
         number: number,
       })
     }).then(resp => resp.json())
@@ -54,36 +54,54 @@ function App() {
 
   // Componentes 3D para los elementos, escalados para mejor visibilidad
   const Box = ({ position, width, height, depth }) => (
-    <mesh position={position} scale={[width, height, depth]}>
+    <mesh
+      position={[
+        position[0] + width / 2,
+        position[1] + height / 2,
+        position[2] + depth / 2
+      ]}
+      scale={[width, height, depth]}
+    >
       <boxGeometry args={[1, 1, 1]} />
-      <meshStandardMaterial color="orange" /> {/* O usar otro material simple */}
-    </mesh>
-  );
-
-  const Robot = ({ position }) => (
-    <mesh position={position} scale={[1, 1, 1]}>
-      <boxGeometry args={[1, 1, 1]} />
-      <meshStandardMaterial map={new THREE.TextureLoader().load("./dron1.png")} />
-    </mesh>
-  );
-
-  const Angar = ({ position }) => (
-    <mesh position={position} scale={[5, 5, 5]}>
-      {}
-      <boxGeometry args={[1, 1, 1]} />
-      {}
-      <meshStandardMaterial 
-        color="lightgray" 
-        transparent={true} 
-        opacity={0.7
-      } />
+      <meshStandardMaterial color="orange" />
     </mesh>
   );
   
 
+  const Robot = ({ position }) => (
+    <mesh position={[position[0], position[1] +0.5, position[2]]} scale={[1, 1, 1]}>
+      <boxGeometry args={[1, 1, 1]} />
+      <meshStandardMaterial map={new THREE.TextureLoader().load("./dron1.png")} />
+    </mesh>
+  );
+  
+  
+
+  const Angar = ({ position }) => {
+    // Ajuste para mover el hangar desde su esquina a su centro
+    const adjustedPosition = [
+      position[0] + 22 / 2, // Desplaza la mitad de la escala en X
+      position[1] + 10 / 2, // Desplaza la mitad de la escala en Y
+      position[2] + 32 / 2  // Desplaza la mitad de la escala en Z
+    ];
+  
+    return (
+      <mesh position={adjustedPosition} scale={[22, 10, 32]}>
+        <boxGeometry args={[1, 1, 1]} />
+        <meshStandardMaterial 
+          color="lightgray" 
+          transparent={true} 
+          opacity={0.7} 
+        />
+      </mesh>
+    );
+  };
+  
+  
+
   const Ground = () => (
-    <mesh rotation={[-Math.PI / 2, 0, 0]} position={[20.5, 0, 20.5]}>
-      <planeGeometry args={[40, 40]} />
+    <mesh rotation={[-Math.PI / 2, 0, 0]} position={[75, 1, 50]}>
+      <planeGeometry args={[170, 120]} />
       <meshStandardMaterial color="#b0b0b0" />
     </mesh>
   );
@@ -101,7 +119,7 @@ function App() {
 
       <p>Pasos: {pasos}</p>
 
-      <Canvas camera={{ position: [25, 20, 70], fov: 50 }}>
+      <Canvas camera={{ position: [110, 20, 90], fov: 50 }}>
         <ambientLight intensity={0.6} />
         <pointLight position={[10, 20, 10]} />
         <OrbitControls />
