@@ -119,7 +119,7 @@ function App() {
 
       <p>Pasos: {pasos}</p>
 
-      <Canvas camera={{ position: [110, 20, 90], fov: 50 }}>
+      <Canvas camera={{ position: [25, 20, 70], fov: 50 }}>
         <ambientLight intensity={0.6} />
         <pointLight position={[10, 20, 10]} />
         <OrbitControls />

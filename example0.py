@@ -54,7 +54,7 @@ for idx, packer in enumerate(packers):
     )
 
     # Margen y posición inicial del packer en el eje X
-    x_inicial = 1 + idx * (22 + 2)
+    x_inicial = 1 + idx * (22 + 10)
 
     # Ajustar las posiciones de las cajas
     for box in packer.bins:

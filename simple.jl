@@ -99,6 +99,15 @@ function target_position_nearby(agent::robot, model, fitted_items)
     return nothing  # Si no encuentra una posición válida
 end
 
+function can_move_to_position(agent::robot, pos, model)
+    for neighbor in nearby_agents(pos, model)
+        if isa(neighbor, box) && neighbor.status != taken
+            return false  # No se puede mover si hay una caja en la posición
+        end
+    end
+    return true
+end
+
 function agent_step!(agent::robot, model)
     # Leer los datos del JSON
     fitted_items = read_list_data("C:/Users/gainl/.julia/loquesea/cajas1.json")["fitted_items"]
@@ -112,17 +121,29 @@ function agent_step!(agent::robot, model)
             actual_pos = agent.pos
 
             # Movimiento por pasos: primero en Y, luego en Z, y finalmente en X
-if actual_pos[2] != obj_pos[2]
-    posicion_act = (actual_pos[1], actual_pos[2] + sign(obj_pos[2] - actual_pos[2]), actual_pos[3])
-elseif actual_pos[3] != obj_pos[3]
-    posicion_act = (actual_pos[1], actual_pos[2], actual_pos[3] + sign(obj_pos[3] - actual_pos[3]))
-elseif actual_pos[1] != obj_pos[1]
-    posicion_act = (actual_pos[1] + sign(obj_pos[1] - actual_pos[1]), actual_pos[2], actual_pos[3])
-else
-    posicion_act = (actual_pos[1], actual_pos[2], actual_pos[3])  # Ya en la posición deseada
-end
-
-move_agent!(agent, posicion_act, model)
+    if actual_pos[2] != obj_pos[2]
+        posicion_act = (actual_pos[1], actual_pos[2] + sign(obj_pos[2] - actual_pos[2]), actual_pos[3])
+    elseif actual_pos[3] != obj_pos[3]
+        posicion_act = (actual_pos[1], actual_pos[2], actual_pos[3] + sign(obj_pos[3] - actual_pos[3]))
+    elseif actual_pos[1] != obj_pos[1]
+        posicion_act = (actual_pos[1] + sign(obj_pos[1] - actual_pos[1]), actual_pos[2], actual_pos[3])
+    else
+        posicion_act = (actual_pos[1], actual_pos[2], actual_pos[3])  # Ya en la posición deseada
+    end
+    
+    if can_move_to_position(agent, posicion_act, model)
+        move_agent!(agent, posicion_act, model)
+    else
+        println("Movimiento bloqueado: Caja en la posición $(posicion_act). Buscando otra ruta.")
+        if actual_pos[3] != obj_pos[3]
+            posicion_act = (actual_pos[1], actual_pos[2], actual_pos[3] + sign(obj_pos[3] - actual_pos[3]))
+        elseif actual_pos[1] != obj_pos[1]
+            posicion_act = (actual_pos[1] + sign(obj_pos[1] - actual_pos[1]), actual_pos[2], actual_pos[3])
+        else actual_pos[2] != obj_pos[2]
+            posicion_act = (actual_pos[1], actual_pos[2] + sign(obj_pos[2] - actual_pos[2]), actual_pos[3])
+        end
+        move_agent!(agent, posicion_act, model)
+    end
 
 
             if agent.pos == closest_box1.pos
@@ -143,17 +164,17 @@ move_agent!(agent, posicion_act, model)
             actual_pos = agent.pos
 
             # Movimiento por pasos: primero en Y, luego en Z, y finalmente en X
-if actual_pos[2] != obj_pos[2]
-    posicion_act = (actual_pos[1], actual_pos[2] + sign(obj_pos[2] - actual_pos[2]), actual_pos[3])
-elseif actual_pos[3] != obj_pos[3]
-    posicion_act = (actual_pos[1], actual_pos[2], actual_pos[3] + sign(obj_pos[3] - actual_pos[3]))
-elseif actual_pos[1] != obj_pos[1]
-    posicion_act = (actual_pos[1] + sign(obj_pos[1] - actual_pos[1]), actual_pos[2], actual_pos[3])
-else
-    posicion_act = (actual_pos[1], actual_pos[2], actual_pos[3])  # Ya en la posición deseada
-end
+    if actual_pos[2] != obj_pos[2]
+        posicion_act = (actual_pos[1], actual_pos[2] + sign(obj_pos[2] - actual_pos[2]), actual_pos[3])
+    elseif actual_pos[3] != obj_pos[3]
+        posicion_act = (actual_pos[1], actual_pos[2], actual_pos[3] + sign(obj_pos[3] - actual_pos[3]))
+    elseif actual_pos[1] != obj_pos[1]
+        posicion_act = (actual_pos[1] + sign(obj_pos[1] - actual_pos[1]), actual_pos[2], actual_pos[3])
+    else
+        posicion_act = (actual_pos[1], actual_pos[2], actual_pos[3])  # Ya en la posición deseada
+    end
 
-move_agent!(agent, posicion_act, model)
+    move_agent!(agent, posicion_act, model)
 
         end
 
@@ -177,8 +198,19 @@ move_agent!(agent, posicion_act, model)
                 posicion_act = (actual_pos[1], actual_pos[2], actual_pos[3])  # Ya en la posición objetivo
             end
 
-            move_agent!(agent, posicion_act, model)
-
+            if can_move_to_position(agent, posicion_act, model)
+                move_agent!(agent, posicion_act, model)
+            else
+                println("Movimiento bloqueado: Caja en la posición $(posicion_act).")
+                if actual_pos[3] != obj_pos[3]
+                    posicion_act = (actual_pos[1], actual_pos[2], actual_pos[3] + sign(obj_pos[3] - actual_pos[3]))
+                elseif actual_pos[1] != obj_pos[1]
+                    posicion_act = (actual_pos[1] + sign(obj_pos[1] - actual_pos[1]), actual_pos[2], actual_pos[3])
+                else actual_pos[2] != obj_pos[2]
+                    posicion_act = (actual_pos[1], actual_pos[2] + sign(obj_pos[2] - actual_pos[2]), actual_pos[3])
+                end
+                move_agent!(agent, posicion_act, model)
+            end
             if agent.pos == Tuple(target_position)
                 # Si ya está en la posición objetivo, coloca la caja
                 agent.capacity = empty
@@ -270,7 +302,7 @@ function initialize_model(; number = 40, griddims = (150, 50, 100))
     num_robots = 5
 robot_positions = [(12, 1, 35), (36, 1, 35), (61, 1, 35), (86, 1, 35), (109, 1, 35)]
 
-# Crear y añadir robots con identificadores únicos
+
 for (i, robot_pos) in enumerate(robot_positions)
     add_agent!(robot, model; pos = robot_pos, identifier = i)
     println("Robot añadido: ID=$i, Posición=$robot_pos")
@@ -287,8 +319,6 @@ end
         error("No hay suficientes posiciones válidas para las cajas")
     end
 
-    # Asigna identificadores únicos a cada caja
-    # Asigna identificadores únicos a cada caja
     for i in 1:number
         dims = caja_dimensiones[i]
         pos = mezcla[i]
@@ -296,17 +326,12 @@ end
         add_agent!(box, model; identifier = i, pos = pos, status = waiting, 
                 width = dims.width, height = dims.height, depth = dims.depth, 
                 weight = dims.weight)
-    
-        # Imprime la información de la caja añadida
         println("Caja añadida: ID=$i, Posición=$pos, Dimensiones=(Width=$(dims.width), Height=$(dims.height), Depth=$(dims.depth)), Peso=$(dims.weight)")
     end
 
     
-    
-    
-
     num_angar = 5
-angar_positions = [(1, 1, 2), (25, 1, 2), (49, 1, 2), (74, 1, 2), (97, 1, 2)]
+angar_positions = [(1, 1, 2), (33, 1, 2), (65, 1, 2), (97, 1, 2), (129, 1, 2)]
 #medida de cada angar (22,10,32)
 
 for i in 1:num_angar
